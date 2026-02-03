@@ -5,8 +5,7 @@ from pymatgen.core import Composition
 from pymatgen.core.periodic_table import Element
 
 # Load training feature template
-FEATURE_COLUMNS = joblib.load(r"C:\Materials and it's Mechanical Properties\Data\feature_columns.pkl")
-
+FEATURE_COLUMNS = ['contains_transition_metal', 'n_elements', 'avg_atomic_number', 'avg_atomic_mass', 'electronegativity_mean', 'electronegativity_std', 'Li', 'O', 'S', 'Sn', 'Be', 'B', 'Mg', 'N', 'Bi', 'Ba', 'K', 'Eu', 'Ni', 'Hg', 'Yb', 'Pb', 'Tb', 'Y', 'Ga', 'Ge', 'Tl', 'Rh', 'Si', 'Ag', 'Cu', 'Sr', 'In', 'Ho', 'Rb', 'Al', 'Au', 'Ca', 'As', 'P', 'Te', 'Cl', 'F', 'I', 'Br', 'Pt', 'U', 'Pa', 'Mn', 'Cd', 'Zn', 'Ir', 'Pd', 'Hf', 'C', 'Fe', 'Ti', 'Cr', 'Co', 'Na', 'Zr', 'V', 'Mo', 'Se', 'H', 'Sb', 'Cs', 'Nb', 'Nd', 'Er', 'Dy', 'Gd', 'Lu', 'La', 'Tm', 'Pm', 'Ac', 'Ce', 'Pr', 'Sm', 'W', 'Pu', 'Np', 'Re', 'Os', 'Ru', 'Ta', 'Sc', 'Tc', 'Th', 'Xe']
 
 def featurize_formula(formula: str) -> pd.DataFrame:
     comp = Composition(formula)
@@ -15,11 +14,11 @@ def featurize_formula(formula: str) -> pd.DataFrame:
     features = {}
 
     # ---------- Global features ----------
-    features["n_elements"] = len(comp.elements)
-
     features["contains_transition_metal"] = bool(
         any(el.is_transition_metal for el in comp.elements)
     )
+
+    features["n_elements"] = len(comp.elements)
 
     features["avg_atomic_number"] = sum(
         el.Z * amt / total_atoms for el, amt in comp.items()
@@ -46,20 +45,27 @@ def featurize_formula(formula: str) -> pd.DataFrame:
     features["electronegativity_std"] = std_x
 
     # ---------- Element fraction features ----------
-    # for el in comp.elements:
-    #     features[str(el)] = comp.get_atomic_fraction(el)
+    for el in comp.elements:
+        features[str(el)] = comp.get_atomic_fraction(el)
 
     # ---------- Build dataframe with correct schema ----------
     X = pd.DataFrame([features])
 
     # Add missing columns (VERY IMPORTANT)
     for col in FEATURE_COLUMNS:
-        if col not in X.columns:
+        if col not in  X.columns:
             X[col] = 0.0
+        
 
     # Enforce correct order
     X = X[FEATURE_COLUMNS]
 
     return X
+
+
+
+
+
+
 
 
